@@ -319,10 +319,8 @@ def main():
     print(bar_label)
     print("---")
 
-    # Electric Indigo palette
-    ACCENT = "color=#FFFFFF darkColor=#C8D0FF"   # white / very bright periwinkle
-    TEXT   = "color=#16161D darkColor=#F0F0FF"   # near-black / cool white
-    MUTED  = "color=#5A62A0 darkColor=#A8B0D8"   # blue-grey / brighter muted periwinkle
+    ON   = "color=#000000 darkColor=#FFFFFF"   # force full-brightness text both modes
+    DIM  = "color=#555555 darkColor=#999999"   # subdued sub-stats
 
     def fmt_model(m):
         m = m.replace("claude-", "")
@@ -334,32 +332,32 @@ def main():
         return replacements.get(m, m.title())
 
     # ── Header ──
-    print(f"Claude | size=14")
+    print(f"Claude | size=14 {ON}")
     print("---")
 
     if data["files_found"] == 0:
-        print(f"⚠️  No Claude Code session files found")
-        print(f"Expected path: ~/.claude/projects/")
+        print(f"⚠️  No Claude Code session files found | {ON}")
+        print(f"Expected path: ~/.claude/projects/ | {DIM}")
         print("---")
     else:
         # ── TODAY ──
-        print(f"TODAY  ·  {date.today().strftime('%b %d')}")
+        print(f"TODAY  ·  {date.today().strftime('%b %d')} | {ON}")
         hero = fmt_tokens(today_tok)
         if SHOW_COST and data["today_cost"] > 0:
             hero += f"  ·  {fmt_cost(data['today_cost'])}"
             if over_budget:
                 hero += "  ⚠️"
-        print(f"  {hero} | size=15")
+        print(f"  {hero} | size=15 {ON}")
         if DAILY_BUDGET > 0:
             bar = usage_bar(data["today_cost"], DAILY_BUDGET)
             limit_str = f"over ${DAILY_BUDGET:.2f} limit" if over_budget else f"${DAILY_BUDGET:.2f} limit"
-            print(f"  {bar}  ·  {limit_str} | size=11")
+            print(f"  {bar}  ·  {limit_str} | size=11 {DIM}")
         if data["sessions_today"] > 0:
-            print(f"  {data['sessions_today']} session{'s' if data['sessions_today'] != 1 else ''} | size=11")
+            print(f"  {data['sessions_today']} session{'s' if data['sessions_today'] != 1 else ''} | size=11 {DIM}")
         if SHOW_COST and data["yesterday_cost"] > 0:
             delta = data["today_cost"] - data["yesterday_cost"]
             arrow = "▲" if delta >= 0 else "▼"
-            print(f"  {arrow} {fmt_cost(abs(delta))} vs yesterday ({fmt_cost(data['yesterday_cost'])}) | size=10")
+            print(f"  {arrow} {fmt_cost(abs(delta))} vs yesterday ({fmt_cost(data['yesterday_cost'])}) | size=10 {DIM}")
         if data["today"]["input_tokens"] or data["today"]["output_tokens"]:
             today_total = total_tokens(data["today"])
             cache_pct = int(data["today"]["cache_read_input_tokens"] / today_total * 100) if today_total else 0
@@ -367,9 +365,9 @@ def main():
                      f"out {fmt_tokens(data['today']['output_tokens'])}"]
             if data["today"]["cache_read_input_tokens"]:
                 parts.append(f"cache {fmt_tokens(data['today']['cache_read_input_tokens'])} ({cache_pct}%)")
-            print(f"  {' · '.join(parts)} | size=10")
+            print(f"  {' · '.join(parts)} | size=10 {DIM}")
         if SHOW_COST and data["today_cache_savings"] >= 0.01:
-            print(f"  saved {fmt_cost(data['today_cache_savings'])} via cache | size=10")
+            print(f"  saved {fmt_cost(data['today_cache_savings'])} via cache | size=10 {DIM}")
         print("---")
 
         # ── THIS WEEK ──
@@ -377,38 +375,38 @@ def main():
         if week_tok > 0:
             week_end = data["week_start"] + timedelta(days=6)
             week_label = f"{data['week_start'].strftime('%b %d')} – {week_end.strftime('%b %d')}"
-            print(f"THIS WEEK  ·  {week_label}")
+            print(f"THIS WEEK  ·  {week_label} | {ON}")
             hero_w = fmt_tokens(week_tok)
             if SHOW_COST and data["week_cost"] > 0:
                 hero_w += f"  ·  {fmt_cost(data['week_cost'])}"
-            print(f"  {hero_w} | size=15")
+            print(f"  {hero_w} | size=15 {ON}")
             print("---")
 
         # ── THIS MONTH ──
-        print(f"THIS MONTH  ·  {date.today().strftime('%B %Y')}")
+        print(f"THIS MONTH  ·  {date.today().strftime('%B %Y')} | {ON}")
         hero_m = fmt_tokens(month_tok)
         if SHOW_COST and data["month_cost"] > 0:
             hero_m += f"  ·  {fmt_cost(data['month_cost'])}"
             if over_monthly_budget:
                 hero_m += "  ⚠️"
-        print(f"  {hero_m} | size=15")
+        print(f"  {hero_m} | size=15 {ON}")
         if MONTHLY_BUDGET > 0:
             bar_m = usage_bar(data["month_cost"], MONTHLY_BUDGET)
             limit_str_m = f"over ${MONTHLY_BUDGET:.0f} limit" if over_monthly_budget else f"${MONTHLY_BUDGET:.0f} limit"
-            print(f"  {bar_m}  ·  {limit_str_m} | size=11")
+            print(f"  {bar_m}  ·  {limit_str_m} | size=11 {DIM}")
         if SHOW_COST and data["projected_month_cost"] > 0 and date.today().day < data["days_in_month"]:
-            print(f"  projected {fmt_cost(data['projected_month_cost'])} this month | size=10")
+            print(f"  projected {fmt_cost(data['projected_month_cost'])} this month | size=10 {DIM}")
         print("---")
 
         # ── ALL TIME ──
-        print(f"ALL TIME")
+        print(f"ALL TIME | {ON}")
         hero_t = fmt_tokens(total_tok)
         if SHOW_COST and data["total_cost"] > 0:
             hero_t += f"  ·  {fmt_cost(data['total_cost'])}"
-        print(f"  {hero_t} | size=15")
+        print(f"  {hero_t} | size=15 {ON}")
         if data["models"]:
             models_str = "  ·  ".join(fmt_model(m) for m in data["models"][:3])
-            print(f"  {models_str} | size=10")
+            print(f"  {models_str} | size=10 {DIM}")
         print("---")
 
     # ── Quick links ──
