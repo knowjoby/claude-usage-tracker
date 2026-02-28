@@ -7,7 +7,7 @@
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
 # <swiftbar.refreshOnOpen>true</swiftbar.refreshOnOpen>
-# <swiftbar.environment>[SHOW_COST=true, PLAN=pro]</swiftbar.environment>
+# <swiftbar.environment>[SHOW_COST=true, PLAN=pro, DAILY_BUDGET=0]</swiftbar.environment>
 #
 # SETUP: Drop this file into your SwiftBar plugins folder.
 # SwiftBar: https://swiftbar.app (free, download from Mac App Store or website)
@@ -18,13 +18,15 @@
 import os
 import json
 import glob
+import subprocess
 from datetime import datetime, timezone, date
 from pathlib import Path
 from collections import defaultdict
 
 # ── Configuration ────────────────────────────────────────────────────────────
-SHOW_COST = os.environ.get("SHOW_COST", "true").lower() == "true"
-PLAN      = os.environ.get("PLAN", "pro")  # "pro" or "api"
+SHOW_COST    = os.environ.get("SHOW_COST", "true").lower() == "true"
+PLAN         = os.environ.get("PLAN", "pro")  # "pro" or "api"
+DAILY_BUDGET = float(os.environ.get("DAILY_BUDGET", "0"))  # USD — 0 = no limit
 
 # Approximate Anthropic pricing per million tokens (USD)
 # Update these if pricing changes: https://www.anthropic.com/pricing
@@ -187,12 +189,20 @@ def main():
     month_tok  = total_tokens(data["month"])
     total_tok  = total_tokens(data["all_time"])
 
+    # Detect if Claude Code is running
+    claude_running = subprocess.run(["pgrep", "-f", "claude"], capture_output=True).returncode == 0
+
+    # Daily budget check
+    over_budget = DAILY_BUDGET > 0 and data["today_cost"] >= DAILY_BUDGET
+
     # Pick menubar icon based on today's usage
     if data["files_found"] == 0:
         icon = "⚙️"
         bar_label = "Claude — no data"
     else:
-        if today_tok == 0:
+        if over_budget:
+            icon = "⚠️"
+        elif today_tok == 0:
             icon = "⚪"
         elif today_tok < 100_000:
             icon = "🟢"
@@ -204,6 +214,8 @@ def main():
         bar_label = f"{icon} {label}"
         if SHOW_COST and data["today_cost"] > 0:
             bar_label += f" · {fmt_cost(data['today_cost'])}"
+        if claude_running:
+            bar_label += " ●"
 
     # ── Menubar text (first line) ──
     print(bar_label)
@@ -237,7 +249,13 @@ def main():
         hero = fmt_tokens(today_tok)
         if SHOW_COST and data["today_cost"] > 0:
             hero += f"  ·  {fmt_cost(data['today_cost'])}"
+            if over_budget:
+                hero += "  ⚠️"
         print(f"  {hero} | font=Menlo size=15 {ACCENT}")
+        if DAILY_BUDGET > 0:
+            bar = usage_bar(data["today_cost"], DAILY_BUDGET)
+            limit_str = f"over ${DAILY_BUDGET:.2f} limit" if over_budget else f"${DAILY_BUDGET:.2f} limit"
+            print(f"  {bar}  ·  {limit_str} | font=Menlo size=11 {MUTED}")
         if data["sessions_today"] > 0:
             print(f"  {data['sessions_today']} session{'s' if data['sessions_today'] != 1 else ''} | font=Menlo size=11 {MUTED}")
         if data["today"]["input_tokens"] or data["today"]["output_tokens"]:
@@ -270,6 +288,11 @@ def main():
     # ── Quick links ──
     print(f"Open Claude.ai | href=https://claude.ai {TEXT}")
     print(f"Anthropic Console | href=https://console.anthropic.com/settings/usage {TEXT}")
+    print("---")
+    if claude_running:
+        print(f"⏸  Stop Claude Code | bash=/usr/bin/pkill param1=-f param2=claude terminal=false refresh=true {TEXT}")
+    else:
+        print(f"✓  Claude Code is idle | {MUTED}")
     print("---")
     print(f"Refresh | refresh=true {MUTED}")
     print(f"  {datetime.now().strftime('%H:%M:%S')} | size=10 {MUTED}")

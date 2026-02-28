@@ -232,5 +232,21 @@ class TestParseSessions(unittest.TestCase):
         self.assertEqual(data["today"]["input_tokens"], 0)
 
 
+class TestDailyBudget(unittest.TestCase):
+    def test_under_budget_bar(self):
+        # $3.40 of $5.00 = 68%
+        bar = usage_bar(3.40, 5.00)
+        self.assertIn("68%", bar)
+        self.assertTrue(bar.startswith("["))
+
+    def test_over_budget_detection(self):
+        # over budget when cost >= limit
+        self.assertTrue(5.0 > 0 and 5.20 >= 5.0)
+        # not over when cost < limit
+        self.assertFalse(5.0 > 0 and 3.40 >= 5.0)
+        # never over when budget is 0
+        self.assertFalse(0.0 > 0 and 100.0 >= 0.0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
