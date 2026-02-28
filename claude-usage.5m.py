@@ -209,12 +209,12 @@ def main():
     print(bar_label)
     print("---")
 
-    # Purple palette — bright throughout:
-    #   primary = #7b68ee / #c4b8ff  (all text)
-    #   dim     = #9080c8 / #a898e8  (timestamp only)
+    # White text — always visible in both light and dark mode
+    C  = "color=#ffffff"   # primary — all text
+    CD = "color=#cccccc"   # dim — timestamp only
 
     # ── Header ──
-    print("Claude Usage Tracker | size=13 color=#7b68ee darkColor=#c4b8ff")
+    print(f"Claude Usage Tracker | size=13 {C}")
     print("---")
 
     if data["files_found"] == 0:
@@ -224,41 +224,41 @@ def main():
         print("---")
     else:
         # ── TODAY ──
-        print(f"📅  TODAY  ({date.today().strftime('%b %d')}) | color=#7b68ee darkColor=#c4b8ff font=Helvetica-Bold")
-        print(f"  Tokens:   {fmt_tokens(today_tok):>10} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
+        print(f"📅  TODAY  ({date.today().strftime('%b %d')}) | {C} font=Helvetica-Bold")
+        print(f"  Tokens:   {fmt_tokens(today_tok):>10} | font=Menlo size=11 {C}")
         if data["sessions_today"] > 0:
-            print(f"  Sessions: {data['sessions_today']:>10} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
+            print(f"  Sessions: {data['sessions_today']:>10} | font=Menlo size=11 {C}")
         if SHOW_COST:
-            print(f"  Est cost: {fmt_cost(data['today_cost']):>10} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
+            print(f"  Est cost: {fmt_cost(data['today_cost']):>10} | font=Menlo size=11 {C}")
         if data["today"]["input_tokens"] or data["today"]["output_tokens"]:
-            print(f"  ↳ Input:  {fmt_tokens(data['today']['input_tokens']):>10} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
-            print(f"  ↳ Output: {fmt_tokens(data['today']['output_tokens']):>10} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
+            print(f"  ↳ Input:  {fmt_tokens(data['today']['input_tokens']):>10} | font=Menlo size=11 {C}")
+            print(f"  ↳ Output: {fmt_tokens(data['today']['output_tokens']):>10} | font=Menlo size=11 {C}")
             if data["today"]["cache_read_input_tokens"]:
-                print(f"  ↳ Cache hit: {fmt_tokens(data['today']['cache_read_input_tokens']):>7} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
+                print(f"  ↳ Cache hit: {fmt_tokens(data['today']['cache_read_input_tokens']):>7} | font=Menlo size=11 {C}")
         print("---")
 
         # ── THIS MONTH ──
-        print(f"📆  THIS MONTH  ({date.today().strftime('%B %Y')}) | color=#7b68ee darkColor=#c4b8ff font=Helvetica-Bold")
-        print(f"  Tokens:   {fmt_tokens(month_tok):>10} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
+        print(f"📆  THIS MONTH  ({date.today().strftime('%B %Y')}) | {C} font=Helvetica-Bold")
+        print(f"  Tokens:   {fmt_tokens(month_tok):>10} | font=Menlo size=11 {C}")
         if SHOW_COST:
-            print(f"  Est cost: {fmt_cost(data['month_cost']):>10} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
+            print(f"  Est cost: {fmt_cost(data['month_cost']):>10} | font=Menlo size=11 {C}")
         print("---")
 
         # ── ALL TIME ──
-        print("🕰️  ALL TIME | color=#7b68ee darkColor=#c4b8ff font=Helvetica-Bold")
-        print(f"  Tokens:   {fmt_tokens(total_tok):>10} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
+        print(f"🕰️  ALL TIME | {C} font=Helvetica-Bold")
+        print(f"  Tokens:   {fmt_tokens(total_tok):>10} | font=Menlo size=11 {C}")
         if SHOW_COST:
-            print(f"  Est cost: {fmt_cost(data['total_cost']):>10} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
+            print(f"  Est cost: {fmt_cost(data['total_cost']):>10} | font=Menlo size=11 {C}")
         if data["models"]:
             models_str = ", ".join(m.replace("claude-", "") for m in data["models"][:3])
-            print(f"  Models:   {models_str} | font=Menlo size=11 color=#7b68ee darkColor=#c4b8ff")
+            print(f"  Models:   {models_str} | font=Menlo size=11 {C}")
         print("---")
 
     # ── Quick links ──
-    print("🔗  Open Claude.ai | href=https://claude.ai color=#7b68ee darkColor=#c4b8ff")
-    print("📊  Anthropic Console | href=https://console.anthropic.com/settings/usage color=#7b68ee darkColor=#c4b8ff")
+    print(f"🔗  Open Claude.ai | href=https://claude.ai {C}")
+    print(f"📊  Anthropic Console | href=https://console.anthropic.com/settings/usage {C}")
     print("---")
-    print("↻  Refresh now | refresh=true color=#7b68ee darkColor=#c4b8ff")
-    print(f"Updated: {datetime.now().strftime('%H:%M:%S')} | size=10 color=#9080c8 darkColor=#a898e8")
+    print(f"↻  Refresh now | refresh=true {C}")
+    print(f"Updated: {datetime.now().strftime('%H:%M:%S')} | size=10 {CD}")
 
 main()
