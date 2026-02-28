@@ -4,6 +4,14 @@ All notable changes to Claude Usage Tracker are documented here.
 
 ---
 
+## [2.2] — 2026-02-28
+
+### Added
+- **Per-session kill** — when multiple Claude Code sessions are running in different directories, each appears as a separate `⏸ ~/project-name` menu item; clicking kills only that session's processes. A `⏸ Stop All` option also appears
+- Single session now shows `⏸ Stop Claude Code (~project-name)` for clarity
+
+---
+
 ## [2.1] — 2026-02-28
 
 ### Added

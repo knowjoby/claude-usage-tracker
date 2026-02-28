@@ -181,6 +181,37 @@ def usage_bar(used, limit, width=10):
     bar = "█" * filled + "░" * (width - filled)
     return f"[{bar}] {pct*100:.0f}%"
 
+# ── Process detection ─────────────────────────────────────────────────────────
+def get_claude_sessions():
+    """Return list of (pids, display_path) for running Claude sessions, grouped by cwd."""
+    try:
+        pgrep = subprocess.run(["pgrep", "-f", "claude"], capture_output=True, text=True)
+        if pgrep.returncode != 0:
+            return []
+        pids = [int(p) for p in pgrep.stdout.strip().split('\n') if p.strip()]
+        if not pids:
+            return []
+        lsof = subprocess.run(
+            ["lsof", "-p", ",".join(str(p) for p in pids), "-d", "cwd", "-Fn"],
+            capture_output=True, text=True, timeout=3
+        )
+        pid_to_cwd = {}
+        current_pid = None
+        for line in lsof.stdout.split('\n'):
+            if line.startswith('p'):
+                try: current_pid = int(line[1:])
+                except ValueError: current_pid = None
+            elif line.startswith('n') and current_pid is not None:
+                pid_to_cwd[current_pid] = line[1:]
+        cwd_to_pids = {}
+        for pid, cwd in pid_to_cwd.items():
+            cwd_to_pids.setdefault(cwd, []).append(pid)
+        home = str(Path.home())
+        return [(pids, cwd.replace(home, '~')) for cwd, pids in cwd_to_pids.items()]
+    except Exception:
+        return []
+
+
 # ── Main output ───────────────────────────────────────────────────────────────
 def main():
     data = parse_sessions()
@@ -189,8 +220,9 @@ def main():
     month_tok  = total_tokens(data["month"])
     total_tok  = total_tokens(data["all_time"])
 
-    # Detect if Claude Code is running
-    claude_running = subprocess.run(["pgrep", "-f", "claude"], capture_output=True).returncode == 0
+    # Detect running Claude Code sessions (grouped by working directory)
+    sessions = get_claude_sessions()
+    claude_running = bool(sessions)
 
     # Daily budget check
     over_budget = DAILY_BUDGET > 0 and data["today_cost"] >= DAILY_BUDGET
@@ -289,10 +321,17 @@ def main():
     print(f"Open Claude.ai | href=https://claude.ai {TEXT}")
     print(f"Anthropic Console | href=https://console.anthropic.com/settings/usage {TEXT}")
     print("---")
-    if claude_running:
-        print(f"⏸  Stop Claude Code | bash=/usr/bin/pkill param1=-f param2=claude terminal=false refresh=true {TEXT}")
-    else:
+    if not sessions:
         print(f"✓  Claude Code is idle | {MUTED}")
+    elif len(sessions) == 1:
+        pids, display = sessions[0]
+        params = " ".join(f"param{i+1}={p}" for i, p in enumerate(pids[:6]))
+        print(f"⏸  Stop Claude Code ({display}) | bash=/bin/kill {params} terminal=false refresh=true {TEXT}")
+    else:
+        for pids, display in sessions:
+            params = " ".join(f"param{i+1}={p}" for i, p in enumerate(pids[:6]))
+            print(f"⏸  {display} | bash=/bin/kill {params} terminal=false refresh=true {TEXT}")
+        print(f"⏸  Stop All | bash=/usr/bin/pkill param1=-f param2=claude terminal=false refresh=true {TEXT}")
     print("---")
     print(f"Refresh | refresh=true {MUTED}")
     print(f"  {datetime.now().strftime('%H:%M:%S')} | size=10 {MUTED}")
