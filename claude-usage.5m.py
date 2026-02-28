@@ -226,7 +226,7 @@ def main():
         print("---")
     else:
         # ── TODAY ──
-        print(f"📅  TODAY  ({date.today().strftime('%b %d')}) | color=#7b68ee darkColor=#a89cff")
+        print(f"📅  TODAY  ({date.today().strftime('%b %d')}) | color=#7b68ee darkColor=#a89cff font=Helvetica-Bold")
         print(f"  Tokens:   {fmt_tokens(today_tok):>10} | font=Menlo size=11 color=#6558d0 darkColor=#c4b8ff")
         if data["sessions_today"] > 0:
             print(f"  Sessions: {data['sessions_today']:>10} | font=Menlo size=11 color=#6558d0 darkColor=#c4b8ff")
@@ -240,14 +240,14 @@ def main():
         print("---")
 
         # ── THIS MONTH ──
-        print(f"📆  THIS MONTH  ({date.today().strftime('%B %Y')}) | color=#7b68ee darkColor=#a89cff")
+        print(f"📆  THIS MONTH  ({date.today().strftime('%B %Y')}) | color=#7b68ee darkColor=#a89cff font=Helvetica-Bold")
         print(f"  Tokens:   {fmt_tokens(month_tok):>10} | font=Menlo size=11 color=#6558d0 darkColor=#c4b8ff")
         if SHOW_COST:
             print(f"  Est cost: {fmt_cost(data['month_cost']):>10} | font=Menlo size=11 color=#6558d0 darkColor=#c4b8ff")
         print("---")
 
         # ── ALL TIME ──
-        print("🕰️  ALL TIME | color=#7b68ee darkColor=#a89cff")
+        print("🕰️  ALL TIME | color=#7b68ee darkColor=#a89cff font=Helvetica-Bold")
         print(f"  Tokens:   {fmt_tokens(total_tok):>10} | font=Menlo size=11 color=#6558d0 darkColor=#c4b8ff")
         if SHOW_COST:
             print(f"  Est cost: {fmt_cost(data['total_cost']):>10} | font=Menlo size=11 color=#6558d0 darkColor=#c4b8ff")
