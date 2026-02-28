@@ -201,64 +201,77 @@ def main():
         else:
             icon = "🔴"
         label = fmt_tokens(today_tok)
-        bar_label = f"{icon} {label} tok"
+        bar_label = f"{icon} {label}"
         if SHOW_COST and data["today_cost"] > 0:
-            bar_label += f"  ·  {fmt_cost(data['today_cost'])}"
+            bar_label += f" · {fmt_cost(data['today_cost'])}"
 
     # ── Menubar text (first line) ──
     print(bar_label)
     print("---")
 
-    # Medium-bright purple — visible on both light and dark backgrounds
-    C  = "color=#8b74ff"   # primary — all text
-    CD = "color=#a090e0"   # dim — timestamp only
+    # Electric Indigo palette
+    ACCENT = "color=#2B35C8 darkColor=#8B96FF"   # deep indigo / bright periwinkle
+    TEXT   = "color=#16161D darkColor=#F0F0FF"   # near-black / cool white
+    MUTED  = "color=#5A62A0 darkColor=#8890C0"   # blue-grey / muted periwinkle
+
+    def fmt_model(m):
+        m = m.replace("claude-", "")
+        for suffix in ("-20251001", "-20240620", "-20240229", "-20250219"):
+            m = m.replace(suffix, "")
+        replacements = {"sonnet-4-6": "Sonnet 4.6", "sonnet-4-5": "Sonnet 4.5",
+                        "opus-4-6": "Opus 4.6",     "opus-4-5": "Opus 4.5",
+                        "haiku-4-5": "Haiku 4.5"}
+        return replacements.get(m, m.title())
 
     # ── Header ──
-    print(f"Claude Usage Tracker | size=13 {C}")
+    print(f"Claude | size=14 font=Georgia-Bold {ACCENT}")
     print("---")
 
     if data["files_found"] == 0:
-        print("⚠️  No Claude Code session files found")
-        print("Make sure Claude Code has been run at least once.")
-        print("Expected path: ~/.claude/projects/")
+        print(f"⚠️  No Claude Code session files found | {TEXT}")
+        print(f"Expected path: ~/.claude/projects/ | {MUTED}")
         print("---")
     else:
         # ── TODAY ──
-        print(f"📅  TODAY  ({date.today().strftime('%b %d')}) | {C} font=Helvetica-Bold")
-        print(f"  Tokens:   {fmt_tokens(today_tok):>10} | font=Menlo size=11 {C}")
+        print(f"TODAY  ·  {date.today().strftime('%b %d')} | font=Georgia-Bold size=13 {ACCENT}")
+        hero = fmt_tokens(today_tok)
+        if SHOW_COST and data["today_cost"] > 0:
+            hero += f"  ·  {fmt_cost(data['today_cost'])}"
+        print(f"  {hero} | font=Menlo size=15 {ACCENT}")
         if data["sessions_today"] > 0:
-            print(f"  Sessions: {data['sessions_today']:>10} | font=Menlo size=11 {C}")
-        if SHOW_COST:
-            print(f"  Est cost: {fmt_cost(data['today_cost']):>10} | font=Menlo size=11 {C}")
+            print(f"  {data['sessions_today']} session{'s' if data['sessions_today'] != 1 else ''} | font=Menlo size=11 {MUTED}")
         if data["today"]["input_tokens"] or data["today"]["output_tokens"]:
-            print(f"  ↳ Input:  {fmt_tokens(data['today']['input_tokens']):>10} | font=Menlo size=11 {C}")
-            print(f"  ↳ Output: {fmt_tokens(data['today']['output_tokens']):>10} | font=Menlo size=11 {C}")
+            parts = [f"in {fmt_tokens(data['today']['input_tokens'])}",
+                     f"out {fmt_tokens(data['today']['output_tokens'])}"]
             if data["today"]["cache_read_input_tokens"]:
-                print(f"  ↳ Cache hit: {fmt_tokens(data['today']['cache_read_input_tokens']):>7} | font=Menlo size=11 {C}")
+                parts.append(f"cache {fmt_tokens(data['today']['cache_read_input_tokens'])}")
+            print(f"  {' · '.join(parts)} | font=Menlo size=10 {MUTED}")
         print("---")
 
         # ── THIS MONTH ──
-        print(f"📆  THIS MONTH  ({date.today().strftime('%B %Y')}) | {C} font=Helvetica-Bold")
-        print(f"  Tokens:   {fmt_tokens(month_tok):>10} | font=Menlo size=11 {C}")
-        if SHOW_COST:
-            print(f"  Est cost: {fmt_cost(data['month_cost']):>10} | font=Menlo size=11 {C}")
+        print(f"THIS MONTH  ·  {date.today().strftime('%B %Y')} | font=Georgia-Bold size=13 {ACCENT}")
+        hero_m = fmt_tokens(month_tok)
+        if SHOW_COST and data["month_cost"] > 0:
+            hero_m += f"  ·  {fmt_cost(data['month_cost'])}"
+        print(f"  {hero_m} | font=Menlo size=15 {ACCENT}")
         print("---")
 
         # ── ALL TIME ──
-        print(f"🕰️  ALL TIME | {C} font=Helvetica-Bold")
-        print(f"  Tokens:   {fmt_tokens(total_tok):>10} | font=Menlo size=11 {C}")
-        if SHOW_COST:
-            print(f"  Est cost: {fmt_cost(data['total_cost']):>10} | font=Menlo size=11 {C}")
+        print(f"ALL TIME | font=Georgia-Bold size=13 {ACCENT}")
+        hero_t = fmt_tokens(total_tok)
+        if SHOW_COST and data["total_cost"] > 0:
+            hero_t += f"  ·  {fmt_cost(data['total_cost'])}"
+        print(f"  {hero_t} | font=Menlo size=15 {ACCENT}")
         if data["models"]:
-            models_str = ", ".join(m.replace("claude-", "") for m in data["models"][:3])
-            print(f"  Models:   {models_str} | font=Menlo size=11 {C}")
+            models_str = "  ·  ".join(fmt_model(m) for m in data["models"][:3])
+            print(f"  {models_str} | font=Menlo size=10 {MUTED}")
         print("---")
 
     # ── Quick links ──
-    print(f"🔗  Open Claude.ai | href=https://claude.ai {C}")
-    print(f"📊  Anthropic Console | href=https://console.anthropic.com/settings/usage {C}")
+    print(f"Open Claude.ai | href=https://claude.ai {TEXT}")
+    print(f"Anthropic Console | href=https://console.anthropic.com/settings/usage {TEXT}")
     print("---")
-    print(f"↻  Refresh now | refresh=true {C}")
-    print(f"Updated: {datetime.now().strftime('%H:%M:%S')} | size=10 {CD}")
+    print(f"Refresh | refresh=true {MUTED}")
+    print(f"  {datetime.now().strftime('%H:%M:%S')} | size=10 {MUTED}")
 
 main()
