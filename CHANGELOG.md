@@ -7,19 +7,31 @@ All notable changes to Claude Usage Tracker are documented here.
 ## [2.0] — 2026-02-28
 
 ### Added
+- **Unit tests** — 30 tests covering all core logic: token formatting, cost calculation, session parsing, and edge cases
+- **README** — full documentation with install instructions, configuration table, pricing table, and screenshot
+- **CHANGELOG** — version history from v1.0
+- **GitHub release** — v2.0 tagged and published
+- **Repo metadata** — description and topics added (`swiftbar`, `claude`, `claude-code`, `anthropic`, `macos`, `menubar`, `token-usage`, `python`)
 - Electric indigo color palette — deep indigo (`#2B35C8`) in light mode, bright periwinkle (`#8B96FF`) in dark mode
 - Token count + estimated cost combined onto one hero line (`9.0M  ·  $3.40`)
 - Georgia-Bold serif font for section headers
 - Cleaner sub-stats line: `in 315 · out 17.8k · cache 11.5M`
 - Prettier model names: `Haiku 4.5 · Sonnet 4.6` (strips version suffixes and `claude-` prefix)
 - Tighter menubar label: `🔴 11.6M · $4.24` (removed "tok" suffix)
-- Symlink-based installer — edits to the repo reflect in SwiftBar instantly
+- Symlink-based installer — edits to the repo reflect in SwiftBar instantly without reinstalling
 
 ### Fixed
 - Font colors now correctly adapt to light and dark mode using `darkColor=` parameter
+- Resolved `darkColor` not applying due to SwiftBar running via macOS app translocation — fixed by moving SwiftBar to `/Applications`
 - Token parsing corrected for nested `message.usage` structure
-- Skips synthetic and error messages to avoid inflated counts
-- SwiftBar must be installed in `/Applications` for `darkColor` to work — installer updated accordingly
+- Skips synthetic and error messages to avoid inflated token counts
+
+### Changed
+- Section labels use Georgia-Bold serif for cleaner typography
+- Removed emojis from section labels (`TODAY`, `THIS MONTH`, `ALL TIME`) for a cleaner look
+- Bold section labels for stronger visual hierarchy
+- Header shortened from `Claude Usage Tracker` to `Claude`
+- Links and refresh row simplified, icons removed
 
 ---
 
