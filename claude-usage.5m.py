@@ -210,7 +210,7 @@ def main():
     print("---")
 
     # ── Header ──
-    print("Claude Usage Tracker | size=13 color=#7b68ee")
+    print("Claude Usage Tracker | size=13 color=#7b68ee darkColor=#a89cff")
     print("---")
 
     if data["files_found"] == 0:
@@ -227,10 +227,10 @@ def main():
         if SHOW_COST:
             print(f"  Est cost: {fmt_cost(data['today_cost']):>10} | font=Menlo size=11")
         if data["today"]["input_tokens"] or data["today"]["output_tokens"]:
-            print(f"  ↳ Input:  {fmt_tokens(data['today']['input_tokens']):>10} | font=Menlo size=11 color=#888")
-            print(f"  ↳ Output: {fmt_tokens(data['today']['output_tokens']):>10} | font=Menlo size=11 color=#888")
+            print(f"  ↳ Input:  {fmt_tokens(data['today']['input_tokens']):>10} | font=Menlo size=11 color=#666 darkColor=#aaa")
+            print(f"  ↳ Output: {fmt_tokens(data['today']['output_tokens']):>10} | font=Menlo size=11 color=#666 darkColor=#aaa")
             if data["today"]["cache_read_input_tokens"]:
-                print(f"  ↳ Cache hit: {fmt_tokens(data['today']['cache_read_input_tokens']):>7} | font=Menlo size=11 color=#888")
+                print(f"  ↳ Cache hit: {fmt_tokens(data['today']['cache_read_input_tokens']):>7} | font=Menlo size=11 color=#666 darkColor=#aaa")
         print("---")
 
         # ── THIS MONTH ──
@@ -247,14 +247,14 @@ def main():
             print(f"  Est cost: {fmt_cost(data['total_cost']):>10} | font=Menlo size=11")
         if data["models"]:
             models_str = ", ".join(m.replace("claude-", "") for m in data["models"][:3])
-            print(f"  Models:   {models_str} | font=Menlo size=11 color=#888")
+            print(f"  Models:   {models_str} | font=Menlo size=11 color=#666 darkColor=#aaa")
         print("---")
 
     # ── Quick links ──
-    print("🔗  Open Claude.ai | href=https://claude.ai color=#555")
-    print("📊  Anthropic Console | href=https://console.anthropic.com/settings/usage color=#555")
+    print("🔗  Open Claude.ai | href=https://claude.ai color=#444 darkColor=#bbb")
+    print("📊  Anthropic Console | href=https://console.anthropic.com/settings/usage color=#444 darkColor=#bbb")
     print("---")
     print("↻  Refresh now | refresh=true")
-    print(f"Updated: {datetime.now().strftime('%H:%M:%S')} | size=10 color=#aaa")
+    print(f"Updated: {datetime.now().strftime('%H:%M:%S')} | size=10 color=#999 darkColor=#777")
 
 main()
