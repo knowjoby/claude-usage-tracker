@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # <swiftbar.title>Claude Usage Tracker</swiftbar.title>
-# <swiftbar.version>1.1</swiftbar.version>
+# <swiftbar.version>2.0</swiftbar.version>
 # <swiftbar.author>knowjoby</swiftbar.author>
 # <swiftbar.desc>Shows Claude Code token usage from local session files</swiftbar.desc>
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
