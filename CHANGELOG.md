@@ -12,6 +12,7 @@ All notable changes to Claude Usage Tracker are documented here.
 - **Daily budget cap** — new `DAILY_BUDGET` env var (USD, `0` = no limit); when set, shows a progress bar in the TODAY section (`[███████░░░] 68%  ·  $5.00 limit`)
 - **Over-budget alert** — menubar icon overrides to `⚠️`, hero line appends `⚠️`, and progress bar shows `over $X.XX limit` when daily spend is exceeded
 - **2 new unit tests** for budget logic (32 total)
+- **Updated screenshot** — README preview reflects new menu items and running indicator
 
 ---
 
