@@ -78,11 +78,18 @@ fi
 
 echo "✅  SwiftBar plugins folder: $PLUGINS_DIR"
 
-# ── Install the plugin ────────────────────────────────────────────────────────
+# ── Install the plugin (symlink so updates reflect automatically) ─────────────
 DEST="$PLUGINS_DIR/$PLUGIN_NAME"
-cp "$PLUGIN_SRC" "$DEST"
-chmod +x "$DEST"
-echo "✅  Plugin installed to: $DEST"
+if [[ -L "$DEST" ]]; then
+    rm "$DEST"
+    echo "ℹ️   Removed existing symlink"
+elif [[ -f "$DEST" ]]; then
+    rm "$DEST"
+    echo "ℹ️   Replaced existing copy with symlink"
+fi
+ln -s "$PLUGIN_SRC" "$DEST"
+chmod +x "$PLUGIN_SRC"
+echo "✅  Plugin symlinked: $DEST -> $PLUGIN_SRC"
 
 # ── Verify Claude Code session files ─────────────────────────────────────────
 CLAUDE_DIR="$HOME/.claude/projects"
