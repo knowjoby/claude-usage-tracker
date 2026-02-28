@@ -209,9 +209,9 @@ def main():
     print(bar_label)
     print("---")
 
-    # White text — always visible in both light and dark mode
-    C  = "color=#ffffff"   # primary — all text
-    CD = "color=#cccccc"   # dim — timestamp only
+    # Medium-bright purple — visible on both light and dark backgrounds
+    C  = "color=#8b74ff"   # primary — all text
+    CD = "color=#a090e0"   # dim — timestamp only
 
     # ── Header ──
     print(f"Claude Usage Tracker | size=13 {C}")
