@@ -86,7 +86,16 @@ def parse_sessions():
                     if entry.get("type") != "assistant":
                         continue
 
-                    usage = entry.get("usage")
+                    # Skip synthetic/error messages (auth failures, etc.)
+                    if entry.get("isApiErrorMessage") or entry.get("error"):
+                        continue
+
+                    # Usage is nested inside the message object
+                    message = entry.get("message", {})
+                    if message.get("model") == "<synthetic>":
+                        continue
+
+                    usage = message.get("usage") or entry.get("usage")
                     if not usage:
                         continue
 
@@ -97,7 +106,7 @@ def parse_sessions():
                     except (ValueError, AttributeError):
                         continue
 
-                    model   = entry.get("model", "default")
+                    model   = message.get("model") or entry.get("model", "default")
                     session = entry.get("sessionId", str(fpath))
                     u = {
                         "input_tokens":                usage.get("input_tokens", 0),
