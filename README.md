@@ -10,13 +10,16 @@ A [SwiftBar](https://swiftbar.app) plugin for macOS that shows your Claude Code 
 
 ## Features
 
-- **Today / This Month / All Time** token counts and estimated costs
+- **Today / This Week / This Month / All Time** token counts and estimated costs
+- **Yesterday delta** — ▲/▼ spend comparison vs the previous day
+- **Cache savings** — shows how much you saved via cache hits, plus cache hit %
 - **Per-model breakdown** — Haiku, Sonnet, Opus all tracked separately
 - **Input, output, and cache** token detail per session
 - **Color-coded menubar icon** — green / yellow / red based on daily usage
 - **Stop Claude Code button** — detects running Claude processes and kills them instantly from the menu
 - **Running indicator** — `●` appended to the menubar label when Claude Code is active
-- **Daily budget cap** — set `DAILY_BUDGET` to get a progress bar and ⚠️ alert when you exceed your limit
+- **Daily and monthly budget caps** — set `DAILY_BUDGET` or `MONTHLY_BUDGET` to get a progress bar and ⚠️ alert when exceeded
+- **Projected monthly cost** — estimated end-of-month spend based on your daily average
 - **Works offline** — reads directly from `~/.claude/projects/` JSONL files
 - **No API key needed** — 100% local
 
@@ -68,7 +71,8 @@ Set environment variables in SwiftBar or at the top of the script:
 |---|---|---|
 | `SHOW_COST` | `true` | Show estimated USD cost |
 | `PLAN` | `pro` | `pro` or `api` (reserved for future use) |
-| `DAILY_BUDGET` | `0` | Daily spend cap in USD — `0` disables. When set, shows a progress bar and ⚠️ alert when exceeded |
+| `DAILY_BUDGET` | `0` | Daily spend cap in USD — `0` disables. Shows a progress bar and ⚠️ alert when exceeded |
+| `MONTHLY_BUDGET` | `0` | Monthly spend cap in USD — `0` disables. Shows a progress bar and ⚠️ alert when exceeded |
 
 To edit via SwiftBar: right-click the menu bar icon → **SwiftBar** → **Edit Plugin**.
 

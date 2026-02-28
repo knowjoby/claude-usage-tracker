@@ -9,6 +9,15 @@ All notable changes to Claude Usage Tracker are documented here.
 ### Added
 - **Per-session kill** — when multiple Claude Code sessions are running in different directories, each appears as a separate `⏸ ~/project-name` menu item; clicking kills only that session's processes. A `⏸ Stop All` option also appears
 - Single session now shows `⏸ Stop Claude Code (~project-name)` for clarity
+- **This Week section** — Mon–today token count and cost, shown when non-zero
+- **Yesterday delta** — ▲/▼ line under TODAY showing spend change vs the previous day
+- **Cache savings** — displays money saved via cache hits; cache % shown in token breakdown line
+- **Monthly budget cap** — new `MONTHLY_BUDGET` env var; shows a progress bar and ⚠️ alert when exceeded
+- **Projected monthly cost** — estimated end-of-month spend based on your daily average, shown mid-month
+
+### Fixed
+- Session deduplication in process detection — subdirectory paths are collapsed to their root project, preventing the same session from appearing multiple times
+- Filtered out non-project paths (must start with `/` and not be `/` or `$HOME`) to avoid phantom entries
 
 ---
 
