@@ -4,6 +4,8 @@ A [SwiftBar](https://swiftbar.app) plugin for macOS that shows your Claude Code 
 
 ![menubar preview](https://img.shields.io/badge/platform-macOS-lightgrey) ![python](https://img.shields.io/badge/python-3.8%2B-blue) ![swiftbar](https://img.shields.io/badge/SwiftBar-2.0%2B-orange)
 
+<img src="screenshots/preview.png" alt="Claude Usage Tracker popup" width="280">
+
 ---
 
 ## Features
