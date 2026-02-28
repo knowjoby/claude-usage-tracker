@@ -90,6 +90,23 @@ Claude Code saves session data as JSONL files in `~/.claude/projects/`. This plu
 
 ---
 
+## Running Tests
+
+The test suite covers all core logic — token formatting, cost calculation, session parsing, and edge cases.
+
+```bash
+python3 test_claude_usage.py
+```
+
+Expected output:
+```
+Ran 30 tests in 0.009s
+
+OK
+```
+
+---
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for version history.
