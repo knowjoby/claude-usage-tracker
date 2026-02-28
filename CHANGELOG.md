@@ -4,6 +4,17 @@ All notable changes to Claude Usage Tracker are documented here.
 
 ---
 
+## [2.1] — 2026-02-28
+
+### Added
+- **Stop Claude Code button** — detects running Claude processes via `pgrep`; shows `⏸ Stop Claude Code` (kills all processes via `pkill`) when active, `✓ Claude Code is idle` otherwise
+- **Running indicator** — appends `●` to the menubar label when Claude Code processes are detected
+- **Daily budget cap** — new `DAILY_BUDGET` env var (USD, `0` = no limit); when set, shows a progress bar in the TODAY section (`[███████░░░] 68%  ·  $5.00 limit`)
+- **Over-budget alert** — menubar icon overrides to `⚠️`, hero line appends `⚠️`, and progress bar shows `over $X.XX limit` when daily spend is exceeded
+- **2 new unit tests** for budget logic (32 total)
+
+---
+
 ## [2.0] — 2026-02-28
 
 ### Added
