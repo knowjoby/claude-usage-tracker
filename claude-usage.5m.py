@@ -7,7 +7,7 @@
 # <swiftbar.hideAbout>true</swiftbar.hideAbout>
 # <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
 # <swiftbar.refreshOnOpen>true</swiftbar.refreshOnOpen>
-# <swiftbar.environment>[SHOW_COST=true, PLAN=pro, DAILY_BUDGET=0]</swiftbar.environment>
+# <swiftbar.environment>[SHOW_COST=true, PLAN=pro, DAILY_BUDGET=0, MONTHLY_BUDGET=0]</swiftbar.environment>
 #
 # SETUP: Drop this file into your SwiftBar plugins folder.
 # SwiftBar: https://swiftbar.app (free, download from Mac App Store or website)
@@ -19,14 +19,15 @@ import os
 import json
 import glob
 import subprocess
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone, date, timedelta
 from pathlib import Path
 from collections import defaultdict
 
 # ── Configuration ────────────────────────────────────────────────────────────
-SHOW_COST    = os.environ.get("SHOW_COST", "true").lower() == "true"
-PLAN         = os.environ.get("PLAN", "pro")  # "pro" or "api"
-DAILY_BUDGET = float(os.environ.get("DAILY_BUDGET", "0"))  # USD — 0 = no limit
+SHOW_COST      = os.environ.get("SHOW_COST", "true").lower() == "true"
+PLAN           = os.environ.get("PLAN", "pro")  # "pro" or "api"
+DAILY_BUDGET   = float(os.environ.get("DAILY_BUDGET", "0"))    # USD — 0 = no limit
+MONTHLY_BUDGET = float(os.environ.get("MONTHLY_BUDGET", "0"))  # USD — 0 = no limit
 
 # Approximate Anthropic pricing per million tokens (USD)
 # Update these if pricing changes: https://www.anthropic.com/pricing
@@ -57,21 +58,35 @@ def calc_cost(model, usage):
         usage["cache_read_input_tokens"]   * p["cache_r"] / mtok
     )
 
+def calc_cache_savings(model, cache_read_tokens):
+    """How much was saved by reading from cache vs paying full input price."""
+    p = PRICES.get(model, PRICES["default"])
+    mtok = 1_000_000
+    return cache_read_tokens * (p["in"] - p["cache_r"]) / mtok
+
 def parse_sessions():
     files = find_jsonl_files()
-    today     = date.today()
+    today      = date.today()
+    yesterday  = today - timedelta(days=1)
+    week_start = today - timedelta(days=today.weekday())  # Monday
     this_month = (today.year, today.month)
 
     totals = {
-        "today":    defaultdict(int),
-        "month":    defaultdict(int),
-        "all_time": defaultdict(int),
+        "today":     defaultdict(int),
+        "yesterday": defaultdict(int),
+        "week":      defaultdict(int),
+        "month":     defaultdict(int),
+        "all_time":  defaultdict(int),
     }
     today_cost = 0.0
+    yesterday_cost = 0.0
+    week_cost = 0.0
     month_cost = 0.0
     total_cost = 0.0
+    today_cache_savings = 0.0
     sessions_today = set()
     models_used = set()
+    month_days_with_data = set()
 
     for fpath in files:
         try:
@@ -129,29 +144,57 @@ def parse_sessions():
                         for k, v in u.items():
                             totals["month"][k] += v
                         month_cost += cost
+                        month_days_with_data.add(entry_date)
+
+                    # yesterday
+                    if entry_date == yesterday:
+                        for k, v in u.items():
+                            totals["yesterday"][k] += v
+                        yesterday_cost += cost
+
+                    # this week (Mon–today)
+                    if entry_date >= week_start:
+                        for k, v in u.items():
+                            totals["week"][k] += v
+                        week_cost += cost
 
                     # today
                     if entry_date == today:
                         for k, v in u.items():
                             totals["today"][k] += v
                         today_cost += cost
+                        today_cache_savings += calc_cache_savings(model, u["cache_read_input_tokens"])
                         sessions_today.add(session)
 
         except (OSError, PermissionError):
             continue
 
+    # Projected monthly cost: daily average * days in month
+    days_active = max(len(month_days_with_data), 1)
+    avg_daily = month_cost / days_active
+    days_in_month = (date(today.year, today.month % 12 + 1, 1) - date(today.year, today.month, 1)).days if today.month < 12 else 31
+    projected_month_cost = avg_daily * days_in_month
+
     blank = {"input_tokens": 0, "output_tokens": 0,
              "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0}
     return {
-        "today":          {**blank, **dict(totals["today"])},
-        "month":          {**blank, **dict(totals["month"])},
-        "all_time":       {**blank, **dict(totals["all_time"])},
-        "today_cost":     today_cost,
-        "month_cost":     month_cost,
-        "total_cost":     total_cost,
-        "sessions_today": len(sessions_today),
-        "models":         sorted(models_used),
-        "files_found":    len(files),
+        "today":                {**blank, **dict(totals["today"])},
+        "yesterday":            {**blank, **dict(totals["yesterday"])},
+        "week":                 {**blank, **dict(totals["week"])},
+        "month":                {**blank, **dict(totals["month"])},
+        "all_time":             {**blank, **dict(totals["all_time"])},
+        "today_cost":           today_cost,
+        "yesterday_cost":       yesterday_cost,
+        "week_cost":            week_cost,
+        "month_cost":           month_cost,
+        "total_cost":           total_cost,
+        "today_cache_savings":  today_cache_savings,
+        "projected_month_cost": projected_month_cost,
+        "sessions_today":       len(sessions_today),
+        "models":               sorted(models_used),
+        "files_found":          len(files),
+        "days_in_month":        days_in_month,
+        "week_start":           week_start,
     }
 
 # ── Formatting helpers ────────────────────────────────────────────────────────
@@ -214,14 +257,22 @@ def get_claude_sessions():
             home + "/.Trash",
             "/System/", "/usr/", "/opt/", "/private/", "/var/",
         )
-        results = []
+        candidates = []
         for cwd, pids in cwd_to_pids.items():
+            if not cwd.startswith("/"):
+                continue
             if cwd in ("/", home):
                 continue
             if any(cwd.startswith(p) for p in excluded_prefixes):
                 continue
-            results.append((pids, cwd.replace(home, "~")))
-        return results
+            candidates.append((cwd, pids))
+
+        # Remove paths that are subdirectories of another listed path
+        roots = []
+        for cwd, pids in candidates:
+            if not any(cwd.startswith(other + "/") for other, _ in candidates if other != cwd):
+                roots.append((pids, cwd.replace(home, "~")))
+        return roots
     except Exception:
         return []
 
@@ -238,8 +289,9 @@ def main():
     sessions = get_claude_sessions()
     claude_running = bool(sessions)
 
-    # Daily budget check
-    over_budget = DAILY_BUDGET > 0 and data["today_cost"] >= DAILY_BUDGET
+    # Budget checks
+    over_budget         = DAILY_BUDGET   > 0 and data["today_cost"]  >= DAILY_BUDGET
+    over_monthly_budget = MONTHLY_BUDGET > 0 and data["month_cost"]  >= MONTHLY_BUDGET
 
     # Pick menubar icon based on today's usage
     if data["files_found"] == 0:
@@ -304,20 +356,48 @@ def main():
             print(f"  {bar}  ·  {limit_str} | font=Menlo size=11 {MUTED}")
         if data["sessions_today"] > 0:
             print(f"  {data['sessions_today']} session{'s' if data['sessions_today'] != 1 else ''} | font=Menlo size=11 {MUTED}")
+        if SHOW_COST and data["yesterday_cost"] > 0:
+            delta = data["today_cost"] - data["yesterday_cost"]
+            arrow = "▲" if delta >= 0 else "▼"
+            print(f"  {arrow} {fmt_cost(abs(delta))} vs yesterday ({fmt_cost(data['yesterday_cost'])}) | font=Menlo size=10 {MUTED}")
         if data["today"]["input_tokens"] or data["today"]["output_tokens"]:
+            today_total = total_tokens(data["today"])
+            cache_pct = int(data["today"]["cache_read_input_tokens"] / today_total * 100) if today_total else 0
             parts = [f"in {fmt_tokens(data['today']['input_tokens'])}",
                      f"out {fmt_tokens(data['today']['output_tokens'])}"]
             if data["today"]["cache_read_input_tokens"]:
-                parts.append(f"cache {fmt_tokens(data['today']['cache_read_input_tokens'])}")
+                parts.append(f"cache {fmt_tokens(data['today']['cache_read_input_tokens'])} ({cache_pct}%)")
             print(f"  {' · '.join(parts)} | font=Menlo size=10 {MUTED}")
+        if SHOW_COST and data["today_cache_savings"] >= 0.01:
+            print(f"  saved {fmt_cost(data['today_cache_savings'])} via cache | font=Menlo size=10 {MUTED}")
         print("---")
+
+        # ── THIS WEEK ──
+        week_tok = total_tokens(data["week"])
+        if week_tok > 0:
+            week_end = data["week_start"] + timedelta(days=6)
+            week_label = f"{data['week_start'].strftime('%b %d')} – {week_end.strftime('%b %d')}"
+            print(f"THIS WEEK  ·  {week_label} | font=Georgia-Bold size=13 {ACCENT}")
+            hero_w = fmt_tokens(week_tok)
+            if SHOW_COST and data["week_cost"] > 0:
+                hero_w += f"  ·  {fmt_cost(data['week_cost'])}"
+            print(f"  {hero_w} | font=Menlo size=15 {ACCENT}")
+            print("---")
 
         # ── THIS MONTH ──
         print(f"THIS MONTH  ·  {date.today().strftime('%B %Y')} | font=Georgia-Bold size=13 {ACCENT}")
         hero_m = fmt_tokens(month_tok)
         if SHOW_COST and data["month_cost"] > 0:
             hero_m += f"  ·  {fmt_cost(data['month_cost'])}"
+            if over_monthly_budget:
+                hero_m += "  ⚠️"
         print(f"  {hero_m} | font=Menlo size=15 {ACCENT}")
+        if MONTHLY_BUDGET > 0:
+            bar_m = usage_bar(data["month_cost"], MONTHLY_BUDGET)
+            limit_str_m = f"over ${MONTHLY_BUDGET:.0f} limit" if over_monthly_budget else f"${MONTHLY_BUDGET:.0f} limit"
+            print(f"  {bar_m}  ·  {limit_str_m} | font=Menlo size=11 {MUTED}")
+        if SHOW_COST and data["projected_month_cost"] > 0 and date.today().day < data["days_in_month"]:
+            print(f"  projected {fmt_cost(data['projected_month_cost'])} this month | font=Menlo size=10 {MUTED}")
         print("---")
 
         # ── ALL TIME ──
