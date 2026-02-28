@@ -207,7 +207,21 @@ def get_claude_sessions():
         for pid, cwd in pid_to_cwd.items():
             cwd_to_pids.setdefault(cwd, []).append(pid)
         home = str(Path.home())
-        return [(pids, cwd.replace(home, '~')) for cwd, pids in cwd_to_pids.items()]
+        # Only keep directories that look like real project dirs
+        # (inside home, but not macOS system/library paths)
+        excluded_prefixes = (
+            home + "/Library/",
+            home + "/.Trash",
+            "/System/", "/usr/", "/opt/", "/private/", "/var/",
+        )
+        results = []
+        for cwd, pids in cwd_to_pids.items():
+            if cwd in ("/", home):
+                continue
+            if any(cwd.startswith(p) for p in excluded_prefixes):
+                continue
+            results.append((pids, cwd.replace(home, "~")))
+        return results
     except Exception:
         return []
 
