@@ -90,6 +90,12 @@ Claude Code saves session data as JSONL files in `~/.claude/projects/`. This plu
 
 ---
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history.
+
+---
+
 ## License
 
 MIT
